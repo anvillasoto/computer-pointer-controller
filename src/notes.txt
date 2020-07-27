@@ -1,0 +1,8 @@
+source /opt/intel/openvino/bin/setupvars.sh -pyver 3.7
+sudo apt install x11-xserver-utils
+sudo pip3 install --upgrade --force-reinstall python3-xlib
+sudo apt-get install python3-tk python3-dev
+install xming from https://sourceforge.net/projects/xming/files/latest/download
+
+
+export DISPLAY=localhost:0.0

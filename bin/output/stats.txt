@@ -1,0 +1,7 @@
+Total Inference Time for Four Models: 175.8
+Frames Per Second for Four Models: 3.38452787258248
+
+Model Load Time (Face Detection): 0.18022942543029785
+Model Load Time (Facial Landmark Detection): 0.07325267791748047
+Model Load Time (Head Pose Estimation): 0.10113644599914551
+Model Load Time (Gaze Estimation): 0.11391782760620117

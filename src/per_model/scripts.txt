@@ -1,0 +1,21 @@
+Face Detection Model:
+python3 test_face_detection_model.py --model "../../models/intel/face-detection-adas-binary-0001/FP32-INT1/face-detection-adas-binary-0001" --video "../../bin/demo.mp4" --output_path outputs/test_face_detection_model/ --threshold 0.5
+
+Facial Landmark Detection Model
+python3 test_facial_landmarks_detection_model.py --model "../../models/intel/landmarks-regression-retail-0009/FP32/landmarks-regression-retail-0009" --video "outputs/test_face_detection_model/test_face_detection_model.mp4" --output_path "outputs/test_facial_landmarks_detection_model/"
+
+Head Pose Estimation Model
+python3 test_head_pose_estimation_model.py --model "../../models/intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001" --video "outputs/test_face_detection_model/test_face_detection_model.mp4" --output_path "outputs/test_head_pose_estimation_model/"
+
+Gaze Estimation model
+python3 test_gaze_estimation_model.py --model "../../models/intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002" --video "../../bin/demo.mp4" --output_path "outputs/test_gaze_estimation_model/"
+
+Main File
+python3 main.py --face_detection_model "../models/intel/face-detection-adas-binary-0001/FP32-INT1/face-detection-adas-binary-0001" --head_pose_estimation_model "../models/intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001" --facial_landmarks_detection_model "../models/intel/landmarks-regression-retail-0009/FP32/landmarks-regression-retail-0009" --gaze_estimation_model "../models/intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002" --device CPU --video "../bin/demo.mp4" --output_path "../bin/output/" --threshold 0.50
+
+
+Environment
+pip3 install -r requirements.txt
+virtualenv computer-pointer-env
+source computer-pointer-env/bin/activate
+
