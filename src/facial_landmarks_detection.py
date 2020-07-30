@@ -3,37 +3,20 @@ from openvino.inference_engine import IECore
 import cv2
 import logging as log
 
+from model import Model
+
 # CONSTANTS
 COLOR_GREEN_BGR = (95, 191, 0)
 REQUEST_ID = 0
 
-class FacialLandmarksDetectionModel:
+class FacialLandmarksDetectionModel(Model):
     '''
     Class for the Face Detection Model.
     '''
     def __init__(self, model_name, device):
-        self.model_weights=model_name+'.bin'
-        self.model_structure=model_name+'.xml'
-        self.device=device
+        Model.__init__(self, model_name, device, 'facial_landmarks_detection_model')
 
-        try:
-            self.core = IECore()
-            self.model=self.core.read_network(model=self.model_structure, weights=self.model_weights)
-        except Exception as e:
-            raise ValueError("Could not Initialise the network. Have you enterred the correct model path?")
-
-        self.input_name=next(iter(self.model.inputs))
-        self.input_shape=self.model.inputs[self.input_name].shape
-        self.output_name=next(iter(self.model.outputs))
-        self.output_shape=self.model.outputs[self.output_name].shape
-
-    def load_model(self):
-        try:
-            self.net = self.core.load_network(network=self.model, device_name=self.device, num_requests=1)
-        except Exception as e:
-            log.error(e)
-
-    def predict(self, image):
+    def predict(self, image, toggle_eye_detection):
         try:
             image_for_prediction = self.preprocess_input(image)
             input_dict = {self.input_name: image_for_prediction}
@@ -42,17 +25,13 @@ class FacialLandmarksDetectionModel:
             if self.net.requests[REQUEST_ID].wait(-1) == 0:
                 outputs = self.net.requests[REQUEST_ID].outputs[self.output_name]
                 coords = self.preprocess_output(outputs)
-                eye_locations, eye_images, image = self.draw_outputs(coords, image)
+                eye_locations, eye_images, image = self.draw_outputs(coords, image, toggle_eye_detection)
             
             return eye_locations, eye_images, image
         except Exception as e:
             log.error(f"Error in predict: {e}")
 
-    def check_model(self):
-        # i don't need this
-        pass
-
-    def draw_outputs(self, coords, image):
+    def draw_outputs(self, coords, image, toggle_eye_detection):
         # see the accepted answer here for details. 
         # https://knowledge.udacity.com/questions/245775
         try:
@@ -84,11 +63,12 @@ class FacialLandmarksDetectionModel:
             right_eye_image = image[right_eye_ymin: right_eye_ymax, right_eye_xmin: right_eye_xmax].copy()
             right_eye_image = self.preprocess_input(right_eye_image, type='eye')
 
-            # draw rectangle for each eye
-            cv2.rectangle(image, (left_eye_xmin, left_eye_ymin), (left_eye_xmax, left_eye_ymax), COLOR_GREEN_BGR, 2)
-            cv2.rectangle(image, (right_eye_xmin, right_eye_ymin), (right_eye_xmax, right_eye_ymax), COLOR_GREEN_BGR, 2)
+            # draw rectangle for each eye based on toggle
+            if toggle_eye_detection == 1:
+                cv2.rectangle(image, (left_eye_xmin, left_eye_ymin), (left_eye_xmax, left_eye_ymax), COLOR_GREEN_BGR, 2)
+                cv2.rectangle(image, (right_eye_xmin, right_eye_ymin), (right_eye_xmax, right_eye_ymax), COLOR_GREEN_BGR, 2)
 
-            eye_images = {"left_eye_image": left_eye_image.tolist(), "right_eye_image": right_eye_image.tolist()}
+            eye_images = {"left_eye_image": left_eye_image, "right_eye_image": right_eye_image}
 
             return eye_locations, eye_images, image
         

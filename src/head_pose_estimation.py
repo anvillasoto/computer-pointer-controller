@@ -4,39 +4,22 @@ import cv2
 import logging as log
 import math
 
+from model import Model
+
 # CONSTANTS
 COLOR_BLUE_BGR = (255, 127, 0)
 COLOR_GREEN_BGR = (95, 191, 0)
 COLOR_RED_BGR = (86, 86, 255)
 REQUEST_ID = 0
 
-class HeadPoseEstimationModel:
+class HeadPoseEstimationModel(Model):
     '''
     Class for the Face Detection Model.
     '''
     def __init__(self, model_name, device):
-        self.model_weights=model_name+'.bin'
-        self.model_structure=model_name+'.xml'
-        self.device=device
+        Model.__init__(self, model_name, device, 'head_pose_estimation_model')
 
-        try:
-            self.core = IECore()
-            self.model=self.core.read_network(model=self.model_structure, weights=self.model_weights)
-        except Exception as e:
-            raise ValueError("Could not Initialise the network. Have you enterred the correct model path?")
-
-        self.input_name=next(iter(self.model.inputs))
-        self.input_shape=self.model.inputs[self.input_name].shape
-        self.output_name=next(iter(self.model.outputs))
-        self.output_shape=self.model.outputs[self.output_name].shape
-
-    def load_model(self):
-        try:
-            self.net = self.core.load_network(network=self.model, device_name=self.device, num_requests=1)
-        except Exception as e:
-            log.error(e)
-
-    def predict(self, image, image_to_be_drawn):
+    def predict(self, image, image_to_be_drawn, toggle_head_pose_euler_angles):
         try:
             image_for_prediction = self.preprocess_input(image)
             input_dict = {self.input_name: image_for_prediction}
@@ -44,15 +27,11 @@ class HeadPoseEstimationModel:
 
             if self.net.requests[REQUEST_ID].wait(-1) == 0:
                 outputs = self.net.requests[REQUEST_ID].outputs
-                head_pose_angles, image_to_be_drawn = self.draw_outputs(outputs, image, image_to_be_drawn)
+                head_pose_angles, image_to_be_drawn = self.draw_outputs(outputs, image, image_to_be_drawn, toggle_head_pose_euler_angles)
             
             return head_pose_angles, image_to_be_drawn
         except Exception as e:
             log.error(f"Error in predict: {e}")
-
-    def check_model(self):
-        # i don't need this
-        pass
 
     # from here:
     # https://github.com/hampen2929/pyvino/blob/master/pyvino/model/face_recognition/head_pose_estimation/head_pose_estimation.py
@@ -69,7 +48,7 @@ class HeadPoseEstimationModel:
 
         return camera_matrix
     
-    def draw_outputs(self, coords, image, image_to_be_drawn):
+    def draw_outputs(self, coords, image, image_to_be_drawn, toggle_head_pose_euler_angles):
         # see the accepted answer here for details. 
         # https://knowledge.udacity.com/questions/171017 which came from
         # https://github.com/hampen2929/pyvino/blob/master/pyvino/model/face_recognition/head_pose_estimation/head_pose_estimation.py
@@ -125,12 +104,16 @@ class HeadPoseEstimationModel:
             xp2 = (xaxis[0] / xaxis[2] * camera_matrix[0][0]) + cx
             yp2 = (xaxis[1] / xaxis[2] * camera_matrix[1][1]) + cy
             p2 = (int(xp2), int(yp2))
-            cv2.line(image_to_be_drawn, (cx, cy), p2, COLOR_RED_BGR, 2)
+
+            if toggle_head_pose_euler_angles == 1:
+                cv2.line(image_to_be_drawn, (cx, cy), p2, COLOR_RED_BGR, 2)
 
             xp2 = (yaxis[0] / yaxis[2] * camera_matrix[0][0]) + cx
             yp2 = (yaxis[1] / yaxis[2] * camera_matrix[1][1]) + cy
             p2 = (int(xp2), int(yp2))
-            cv2.line(image_to_be_drawn, (cx, cy), p2, (0, 255, 0), 2)
+
+            if toggle_head_pose_euler_angles == 1:
+                cv2.line(image_to_be_drawn, (cx, cy), p2, (0, 255, 0), 2)
 
             xp1 = (zaxis1[0] / zaxis1[2] * camera_matrix[0][0]) + cx
             yp1 = (zaxis1[1] / zaxis1[2] * camera_matrix[1][1]) + cy
@@ -139,8 +122,9 @@ class HeadPoseEstimationModel:
             yp2 = (zaxis[1] / zaxis[2] * camera_matrix[1][1]) + cy
             p2 = (int(xp2), int(yp2))
 
-            cv2.line(image_to_be_drawn, p1, p2, (255, 0, 0), 2)
-            cv2.circle(image_to_be_drawn, p2, 3, (255, 0, 0), 2)
+            if toggle_head_pose_euler_angles == 1:
+                cv2.line(image_to_be_drawn, p1, p2, (255, 0, 0), 2)
+                cv2.circle(image_to_be_drawn, p2, 3, (255, 0, 0), 2)
 
             return head_pose_angles, image_to_be_drawn
         

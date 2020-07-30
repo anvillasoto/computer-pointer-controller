@@ -76,8 +76,9 @@ To run the application, execute the following in the __src__ directory:
 
 ```
 cd src
-Main File
-python3 main.py --face_detection_model "../models/intel/face-detection-adas-binary-0001/FP32-INT1/          face-detection-adas-binary-0001" --head_pose_estimation_model "../models/intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001" --facial_landmarks_detection_model "../models/intel/landmarks-regression-retail-0009/FP32/landmarks-regression-retail-0009" --gaze_estimation_model "../models/intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002" --device CPU --video "../bin/demo.mp4" --output_path "../bin/output/" --threshold 0.50
+
+# Main File
+python3 main.py --face_detection_model "../models/intel/face-detection-adas-binary-0001/FP32-INT1/face-detection-adas-binary-0001" --head_pose_estimation_model "../models/intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001" --facial_landmarks_detection_model "../models/intel/landmarks-regression-retail-0009/FP32/landmarks-regression-retail-0009" --gaze_estimation_model "../models/intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002" --device CPU --video "../bin/demo.mp4" --output_path "../bin/output/" --threshold 0.50 --toggle_face_detect 1 --toggle_eye_detection 1 --toggle_head_pose_euler_angles 1 --toggle_gaze_estimation_direction_lines 1
 ```
 
 To see the mouse pointer in action particularly in Windows running Ubuntu WSL, run __Xming Server__ or double click from the system tray if available.
@@ -95,9 +96,22 @@ Running the application is pretty straightforward as long as you follow the inst
 7. __--output_path__ - output path for drawn video image and statistics
 8. __--threshold__ - probability threshold for face detection (0.6 by default)
 
+### Optional Arguments
+
+To toggle bounding boxes and direction lines per model, you can supply 1 to one or more of these:
+
+1. __--toggle_face_detect__ - toggle face detect bounding box (default is 1)
+2. __--toggle_eye_detection__ - toggle eye detection bounding box (default is 1)
+3. __--toggle_head_pose_euler_angles__ - toggle head pose Euler angles (default is 1)
+4. __--toggle_gaze_estimation_direction_lines__ - toggle gaze estimation direction lines (default is 1)
+
 ## Benchmarks
 
-For the benchmarking, the author created separate scripts for each models supported which can be found in __src/per_model__ directory. Basically it is the stripped down version on how to run main.py file as explained in the previous section which can be run independently. The order of which they should run can be seen in scripts that follow:
+For the benchmarking, the author created separate scripts for each models supported which can be found in __src/per_model__ directory. Basically it is the stripped down version on how to run main.py file as explained in the previous section which can be run independently. Each script requires a precision and device arguments to test for model precision and device environment to do simulations with.
+
+### Scripts
+
+The order of which they should run can be seen in scripts that follow.
 
 ```
 cd src/per_model
@@ -106,20 +120,38 @@ cd src/per_model
 python3 test_face_detection_model.py --model "../../models/intel/face-detection-adas-binary-0001/FP32-INT1/face-detection-adas-binary-0001" --video "../../bin/demo.mp4" --output_path outputs/test_face_detection_model/ --threshold 0.5
 
 # Facial Landmark Detection Model
-python3 test_facial_landmarks_detection_model.py --model "../../models/intel/landmarks-regression-retail-0009/FP32/landmarks-regression-retail-0009" --video "outputs/test_face_detection_model/test_face_detection_model.mp4" --output_path "outputs/test_facial_landmarks_detection_model/"
+python3 test_facial_landmarks_detection_model.py --model "../../models/intel/landmarks-regression-retail-0009/FP32/landmarks-regression-retail-0009" --video "outputs/test_face_detection_model/test_face_detection_model.mp4" --output_path "outputs/test_facial_landmarks_detection_model/" --precision FP32 --device CPU
+
+python3 test_facial_landmarks_detection_model.py --model "../../models/intel/landmarks-regression-retail-0009/FP16-INT8/landmarks-regression-retail-0009" --video "outputs/test_face_detection_model/test_face_detection_model.mp4" --output_path "outputs/test_facial_landmarks_detection_model/" --precision FP16-INT8 --device CPU
+
+python3 test_facial_landmarks_detection_model.py --model "../../models/intel/landmarks-regression-retail-0009/FP16/landmarks-regression-retail-0009" --video "outputs/test_face_detection_model/test_face_detection_model.mp4" --output_path "outputs/test_facial_landmarks_detection_model/" --precision FP16 --device CPU
+
 
 # Head Pose Estimation Model
-python3 test_head_pose_estimation_model.py --model "../../models/intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001" --video "outputs/test_face_detection_model/test_face_detection_model.mp4" --output_path "outputs/test_head_pose_estimation_model/"
+python3 test_head_pose_estimation_model.py --model "../../models/intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001" --video "outputs/test_face_detection_model/test_face_detection_model.mp4" --output_path "outputs/test_head_pose_estimation_model/" --precision FP32 --device CPU
 
-# Gaze Estimation Model
-python3 test_gaze_estimation_model.py --model "../../models/intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002" --video "../../bin/demo.mp4" --output_path "outputs/test_gaze_estimation_model/"
+python3 test_head_pose_estimation_model.py --model "../../models/intel/head-pose-estimation-adas-0001/FP16/head-pose-estimation-adas-0001" --video "outputs/test_face_detection_model/test_face_detection_model.mp4" --output_path "outputs/test_head_pose_estimation_model/" --precision FP16 --device CPU
+
+python3 test_head_pose_estimation_model.py --model "../../models/intel/head-pose-estimation-adas-0001/FP16-INT8/head-pose-estimation-adas-0001" --video "outputs/test_face_detection_model/test_face_detection_model.mp4" --output_path "outputs/test_head_pose_estimation_model/" --precision FP16-INT8 --device CPU
+
+
+# Gaze Estimation model
+python3 test_gaze_estimation_model.py --model "../../models/intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002" --video "../../bin/demo.mp4" --output_path "outputs/test_gaze_estimation_model/" --precision FP32 --device CPU
+
+python3 test_gaze_estimation_model.py --model "../../models/intel/gaze-estimation-adas-0002/FP16/gaze-estimation-adas-0002" --video "../../bin/demo.mp4" --output_path "outputs/test_gaze_estimation_model/" --precision FP16 --device CPU
+
+python3 test_gaze_estimation_model.py --model "../../models/intel/gaze-estimation-adas-0002/FP16-INT8/gaze-estimation-adas-0002" --video "../../bin/demo.mp4" --output_path "outputs/test_gaze_estimation_model/" --precision FP16-INT8 --device CPU
 ```
+
+Note that the above scripts are meant account for multiple precisions permitted by the downloaded model.
 
 ### Face Detection Model Benchmark
 
 For the face detection model, we use the __test_face_detection_model.py__ with inputs like model directory, video feed, output path and probability threshold. The author specifically cropped each of the faces per frame from the video feed, resized each of them in 240 x 370 resolution and saved in a video file to be used in the following two benchmarks. The resulting video can be seen below:
 
 ![02_test_face_detection_model](images/02_test_face_detection_model.gif)
+
+Precision available for the model is limited to FP32.
 
 ### Facial Landmark Detection Model Benchmark
 
@@ -129,6 +161,8 @@ For the facial landmark detection, we use the __test_facial_landmarks_detection_
 
 Another output is a saved text file for left and right eye images extracted per frame, put in the dictionary and appended into a list that will be used as part of the gaze estimation inputs. This text file can be found on [__src/per_model/outputs/test_facial_landmarks_detection_model/eye_images_list.txt__](src/per_model/outputs/test_facial_landmarks_detection_model/eye_images_list.txt)
 
+The available precisions for this model are FP32, FP16 and FP16-INT8. 
+
 ### Head Pose Estimation Model Benchmark
 
 For the head pose estimation model benchmark, we use the __test_head_pose_estimation_model.py__ with arguments quite the same as the facial landmark detection model .py file since head pose estimation model needs a cropped head image to perform prediction. The output is a video file with Euler angles drawn in the middle of each frame signifying head pose direction in three dimensions which you can see below:
@@ -136,6 +170,8 @@ For the head pose estimation model benchmark, we use the __test_head_pose_estima
 ![04_test_head_pose_estimation_model](images/04_test_head_pose_estimation_model.gif)
 
 Another output is the list of Tait-Bryan angles or the output of each prediction per frame saved in the text file which is also a required input for gaze estimation model benchmark. You can find the said file [here](src/per_model/outputs/test_head_pose_estimation_model).
+
+Available precisions for this model are FP32, FP16 and FP16-INT8. 
 
 ### Gaze Estimation Model Benchmark
 
@@ -145,54 +181,76 @@ The process is to load the __eye_images_list.txt__ and __head_pose_angles_list.t
 
 ![05_test_gaze_estimation_model](images/05_test_gaze_estimation_model.gif)
 
+Just like the two previous benchmarks, available precisions for this model are FP32, FP16 and FP16-INT8. 
 
 ## Results
 
-Due to limitation of hardware as discussed in the Prerequisites subsection of Project Set Up and Installation, the author can only report the performance of each model reported by the outputs of the scripts executed from above in CPU and FP32 precisions.
+Since the current distribution of OpenVINO toolkit does not support the integrated graphics mentioned above as explained in this [Intel Community Forum](https://community.intel.com/t5/Intel-Distribution-of-OpenVINO/failed-to-create-engine-No-OpenCL-device-found/td-p/1125671) benchmarks are solely for CPU environments for the meantime.
 
-The result is divided in statistics per model. You can find the statistical output of each script run from four models as well as the main.py file in the following files:
+The result is divided in statistics per model as well as the model precision available to them (see previous section for details). Specifically, the statistics we are looking at are total inference time, frames per second (FPS) and total model load times. 
 
-1. [__src/per_model/outputs/test_face_detection_model/stats.txt__](src/per_model/outputs/test_face_detection_model/stats.txt)
-2. [__src/per_model/outputs/test_facial_landmarks_detection_model/stats.txt__](src/per_model/outputs/test_facial_landmarks_detection_model/stats.txt)
-3. [__src/per_model/outputs/test_gaze_estimation_model/stats.txt__](src/per_model/outputs/test_gaze_estimation_model/stats.txt)
-4. [__src/per_model/outputs/test_head_pose_estimation_model/stats.txt__](src/per_model/outputs/test_head_pose_estimation_model/stats.txt)
+1. Face Detection Model
+    1. [__src/per_model/outputs/test_face_detection_model/stats_CPU_FP32.txt__](src/per_model/outputs/test_face_detection_model/stats_CPU_FP32.txt)
+2. Facial Landmarks Detection Model
+    1. [__src/per_model/outputs/test_facial_landmarks_detection_model/stats_CPU_FP16.txt__](src/per_model/outputs/test_facial_landmarks_detection_model/stats_CPU_FP16.txt)
+    2. [__src/per_model/outputs/test_facial_landmarks_detection_model/stats_CPU_FP16-INT8.txt__](src/per_model/outputs/test_facial_landmarks_detection_model/stats_CPU_FP16-INT8.txt)
+    3. [__src/per_model/outputs/test_facial_landmarks_detection_model/stats_CPU_FP32.txt__](src/per_model/outputs/test_facial_landmarks_detection_model/stats_CPU_FP32.txt)
+3. Head Pose Estimation Model
+    1. [__src/per_model/outputs/test_head_pose_estimation_model/stats_CPU_FP16.txt__](src/per_model/outputs/test_head_pose_estimation_model/stats_CPU_FP16.txt)
+    2. [__src/per_model/outputs/test_head_pose_estimation_model/stats_CPU_FP16-INT8.txt__](src/per_model/outputs/test_head_pose_estimation_model/stats_CPU_FP16-INT8.txt)
+    3. [__src/per_model/outputs/test_head_pose_estimation_model/stats_CPU_FP32.txt__](src/per_model/outputs/test_head_pose_estimation_model/stats_CPU_FP32.txt)
+4. Gaze Estimation Model
+    1. [__src/per_model/outputs/test_gaze_estimation_model/stats_CPU_FP16.txt__](src/per_model/outputs/test_gaze_estimation_model/stats_CPU_FP16.txt)
+    2. [__src/per_model/outputs/test_gaze_estimation_model/stats_CPU_FP16-INT8.txt__](src/per_model/outputs/test_gaze_estimation_model/stats_CPU_FP16-INT8.txt)
+    3. [__src/per_model/outputs/test_gaze_estimation_model/stats_CPU_FP32.txt__](src/per_model/outputs/test_gaze_estimation_model/stats_CPU_FP32.txt)
+
 
 ### Results per Model
 
-Interestingly, results per model on total model load time is significantly fast. Frames per second in the other hand is surprisingly high for facial landmark detection and head pose detection. For face detection and gaze estimation, they are roughly in the 30 FPS territory which is unsurprising because for the former, it not only needs to account for the bounding box for a detected face but also the possibility of the existence of more than one face in the frame not to mention the orientation of the face detected and for the latter, which needs to account for both eye images and head pose which are quite computationally expensive. 
+Interestingly, results per model on total model load time is significantly fast. Frames per second in the other hand is surprisingly high for facial landmark detection and head pose detection. For face detection and gaze estimation, they are roughly in the 30 FPS territory which is unsurprising because for the former, it not only needs to account for the bounding box for a detected face but also the possibility of the existence of more than one face in the frame not to mention the orientation of the face detected and for the latter, which needs to account for both eye images and head pose which are quite computationally expensive.
 
-Specifically, the following are the result per model.
+Another interesting pattern apart from the gaze estimation and face detection which only has one available precision are the model load times, in that there are significant increase as we lower our precision. Additionally, frames per second has an increasing trend as we go down in precision for head pose estimation and gaze estimation models. Finally, inference time for gaze estimation
+
+Specifically, the following are the result per model:
 
 #### Face Detection Model:
 
-Total Inference Time: 17.8
-FPS: 33.42696629213483
-Total Model Load Time: 0.5270497798919678
+| Face Detection   Model |     FP32    |
+|------------------------|:-----------:|
+| Total Inference Time   | 17.4        |
+| FPS                    | 34.1954023  |
+| Total Model Load Time  | 0.211699009 |
 
 #### Facial Landmark Detection Model:
 
-Total Inference Time: 2.7
-FPS: 220.37037037037035
-Total Model Load Time: 0.0960690975189209
+| Facial Landmarks Detection Model |     FP32    |     FP16    |  FP16-INT8  |
+|:--------------------------------:|:-----------:|:-----------:|:-----------:|
+| Total Inference Time             | 2.9         | 2.8         | 3           |
+| FPS                              | 205.1724138 | 212.5       | 198.3333333 |
+| Total Model Load Time            | 0.099189281 | 0.125852346 | 0.235906363 |
 
 #### Head Pose Estimation Model:
 
-Total Inference Time: 3.0
-FPS: 198.33333333333334
-Total Model Load Time: 0.14165019989013672
+| Head Pose   Estimation Model |     FP32    |     FP16    |  FP16-INT8  |
+|:----------------------------:|:-----------:|:-----------:|:-----------:|
+| Total Inference Time         | 3.2         | 3.3         | 3.1         |
+| FPS                          | 185.9375    | 180.3030303 | 191.9354839 |
+| Total Model Load Time        | 0.119713545 | 0.135001898 | 0.275390625 |
 
 #### Gaze Estimation Model:
 
-Total Inference Time: 30.2
-FPS: 19.70198675496689
-Total Model Load Time: 0.11391782760620117
+| Gaze Estimation   Model |     FP32    |     FP16    |  FP16-INT8  |
+|:-----------------------:|:-----------:|:-----------:|:-----------:|
+| Total Inference Time    | 30.2        | 27.1        | 24.3        |
+| FPS                     | 19.70198675 | 25.0174588  | 30.24512579 |
+| Total Model Load Time   | 0.131531477 | 0.125852346 | 0.054563396 |
 
 ## Stand Out Suggestions
 
 Aside from feeding the application with a video file, we can also include a video feed from camera using CAM as input to video argument. We can run this by executing the following command:
 
 ```
-python3 main.py --face_detection_model "../models/intel/face-detection-adas-binary-0001/FP32-INT1/face-detection-adas-binary-0001" --head_pose_estimation_model "../models/intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001" --facial_landmarks_detection_model "../models/intel/landmarks-regression-retail-0009/FP32/landmarks-regression-retail-0009" --gaze_estimation_model "../models/intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002" --device CPU --video "CAM" --output_path "../bin/output/" --threshold 0.50
+python3 main.py --face_detection_model "../models/intel/face-detection-adas-binary-0001/FP32-INT1/face-detection-adas-binary-0001" --head_pose_estimation_model "../models/intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001" --facial_landmarks_detection_model "../models/intel/landmarks-regression-retail-0009/FP32/landmarks-regression-retail-0009" --gaze_estimation_model "../models/intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002" --device CPU --video "CAM" --output_path "../bin/output/" --threshold 0.50 --toggle_face_detect 1 --toggle_eye_detection 1 --toggle_head_pose_euler_angles 1 --toggle_gaze_estimation_direction_lines 1
 ```
 
 ### Async Inference
@@ -203,10 +261,11 @@ All of the implementations from benchmarking to running the main application use
 
 #### Overall Result:
 
-This is incredibly surprising because combining four models not to mention image manipulation per frame is surprisingly effective in CPU. For a 19-second video, frames per second boasted a total of 3 frames per second with a total inference time of 175.8 seconds. With help from multiple accelerators available, we can boost this up more not to mention take advantage of batch processing in IGPU environments.
+This is incredibly surprising because combining four models not to mention image manipulation per frame is surprisingly effective in CPU. For a 19-second video, frames per second boasted a total of 3 frames per second with a total inference time of 175.8 seconds. With help from multiple accelerators available, we can boost this up more not to mention take advantage of batch processing in IGPU environments. For theoverall result, the author chose to go with FP32 precision on all models to have a consistent result across all models.
 
-Total Inference Time for Four Models: 175.8
-Frames Per Second for Four Models: 3.38452787258248
+| Total Inference Time for Four Models | 177.4       |
+|--------------------------------------|-------------|
+| Frames Per Second for Four Models    | 3.354002255 |
 
 ### Edge Cases
 

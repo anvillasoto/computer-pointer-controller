@@ -8,35 +8,18 @@ import sys
 import logging as log
 import json
 
+from model import Model
+
 # CONSTANTS
 COLOR_GREEN_BGR = (95, 191, 0)
 
-class TestFacialLandmarksDetection:
+class TestFacialLandmarksDetection(Model):
     '''
     Class for the Test Facial Landmark Detection.
     '''
 
     def __init__(self, model_name, device):
-        self.model_weights=model_name+'.bin'
-        self.model_structure=model_name+'.xml'
-        self.device=device
-
-        try:
-            self.core = IECore()
-            self.model=self.core.read_network(model=self.model_structure, weights=self.model_weights)
-        except Exception as e:
-            raise ValueError("Could not Initialise the network. Have you enterred the correct model path?")
-
-        self.input_name=next(iter(self.model.inputs))
-        self.input_shape=self.model.inputs[self.input_name].shape
-        self.output_name=next(iter(self.model.outputs))
-        self.output_shape=self.model.outputs[self.output_name].shape
-
-    def load_model(self):
-        try:
-            self.net = self.core.load_network(network=self.model, device_name=self.device, num_requests=1)
-        except Exception as e:
-            log.error(e)
+        Model.__init__(self, model_name, device, 'facial_landmarks_detection_model')
         
     def predict(self, image):
         request_id = 0
@@ -135,6 +118,7 @@ def main(args):
     device=args.device
     video_file=args.video
     output_path=args.output_path
+    precision=args.precision
 
     start_model_load_time=time.time()
     tfld = TestFacialLandmarksDetection(model, device)
@@ -177,10 +161,10 @@ def main(args):
         total_inference_time=round(total_time, 1)
         fps=counter/total_inference_time
 
-        with open(os.path.join(output_path, 'stats.txt'), 'w') as f:
-            f.write(str(total_inference_time)+'\n')
-            f.write(str(fps)+'\n')
-            f.write(str(total_model_load_time)+'\n')
+        with open(os.path.join(output_path, 'stats_' + device + "_" + precision +'.txt'), 'w') as f:
+            f.write('Total Inference Time: '+ str(total_inference_time) + '\n')
+            f.write('FPS: ' + str(fps) + '\n')
+            f.write('Total Model Load Time: ' + str(total_model_load_time) +'\n')
 
         with open(os.path.join(output_path, 'eye_images_list.txt'), 'w', encoding='utf-8') as fout:
             json.dump(eye_images_list, fout)
@@ -196,6 +180,7 @@ if __name__=='__main__':
     parser.add_argument('--device', default='CPU')
     parser.add_argument('--video', default=None)
     parser.add_argument('--output_path', default='/results')
+    parser.add_argument('--precision', default='FP32')
     
     args=parser.parse_args()
 

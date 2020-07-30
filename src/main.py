@@ -25,6 +25,12 @@ def main(args):
     facial_landmarks_detection_model = args.facial_landmarks_detection_model
     gaze_estimation_model = args.gaze_estimation_model
 
+    # toggles
+    toggle_face_detect = int(args.toggle_face_detect)
+    toggle_eye_detection = int(args.toggle_eye_detection)
+    toggle_head_pose_euler_angles = int(args.toggle_head_pose_euler_angles)
+    toggle_gaze_estimation_direction_lines = int(args.toggle_gaze_estimation_direction_lines)
+
     device=args.device
     video_file=args.video
     threshold=args.threshold
@@ -92,25 +98,28 @@ def main(args):
             counter+=1
             
             # detect face
-            face_location, image = fd.predict(frame)
+            face_location, image = fd.predict(frame, toggle_face_detect)
             xmin, ymin, xmax, ymax = face_location[0]
             face_image = image[ymin:ymax, xmin: xmax].copy()
             
             # detect eyes
-            eye_locations, eye_images, face_image_drawn = fld.predict(face_image)
+            eye_locations, eye_images, face_image_drawn = fld.predict(face_image, toggle_eye_detection)
 
             # detect head pose
-            head_pose_angles, face_image_drawn = hpe.predict(face_image, face_image_drawn)
+            head_pose_angles, face_image_drawn = hpe.predict(face_image, face_image_drawn, toggle_head_pose_euler_angles)
 
             # gaze estimation
-            gaze_vector, face_image_drawn = ge.predict(face_image_drawn, eye_images, head_pose_angles, eye_locations)
+            gaze_vector, face_image_drawn = ge.predict(face_image_drawn, eye_images, head_pose_angles, eye_locations, toggle_gaze_estimation_direction_lines)
+
+            # replace face with face image drawn (depending on toggle)
             image[ymin:ymax, xmin: xmax] = face_image_drawn
+
             x, y, z = gaze_vector
 
-
-            # frame message to add gaze vector x, y, and z
-            frame_message = "Gaze Coordinates: {:.2f}, {:.2f}, {:.2f}".format(x, y, z)
-            image = cv2.putText(image, frame_message, (20, 20), cv2.FONT_HERSHEY_COMPLEX, 1, COLOR_WHITE_BGR, 2)
+            if toggle_gaze_estimation_direction_lines == 1:
+                # frame message to add gaze vector x, y, and z
+                frame_message = "Gaze Coordinates: {:.2f}, {:.2f}, {:.2f}".format(x, y, z)
+                image = cv2.putText(image, frame_message, (20, 20), cv2.FONT_HERSHEY_COMPLEX, 1, COLOR_WHITE_BGR, 2)
 
             out_video.write(image)
 
@@ -157,6 +166,14 @@ if __name__=='__main__':
     parser.add_argument('--threshold', default=0.60,
                         help="Probability threshold for face detection"
                              "(0.6 by default)")
+    parser.add_argument('--toggle_face_detect', default=1,
+                        help="Toggle face detect bounding box (default is 1)")
+    parser.add_argument('--toggle_eye_detection', default=1,
+                        help="Toggle eye detection bounding box (default is 1)")
+    parser.add_argument('--toggle_head_pose_euler_angles', default=1,
+                        help="Toggle head pose Euler angles (default is 1)")
+    parser.add_argument('--toggle_gaze_estimation_direction_lines', default=1,
+                        help="Toggle gaze estimation direction lines (default is 1)")
     
     args=parser.parse_args()
 

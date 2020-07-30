@@ -3,38 +3,20 @@ from openvino.inference_engine import IECore
 import cv2
 import logging as log
 
+from model import Model
+
 # CONSTANTS
 COLOR_BLUE_BGR = (255, 170, 86)
 REQUEST_ID = 0
 
-class FaceDetectionModel:
+class FaceDetectionModel(Model):
     '''
     Class for the Face Detection Model.
     '''
     def __init__(self, model_name, device, threshold=0.60):
-        self.model_weights=model_name+'.bin'
-        self.model_structure=model_name+'.xml'
-        self.device=device
-        self.threshold=threshold
+        Model.__init__(self, model_name, device, 'face_detection_model', threshold)
 
-        try:
-            self.core = IECore()
-            self.model=self.core.read_network(model=self.model_structure, weights=self.model_weights)
-        except Exception as e:
-            raise ValueError("Could not Initialise the network. Have you enterred the correct model path?")
-
-        self.input_name=next(iter(self.model.inputs))
-        self.input_shape=self.model.inputs[self.input_name].shape
-        self.output_name=next(iter(self.model.outputs))
-        self.output_shape=self.model.outputs[self.output_name].shape
-
-    def load_model(self):
-        try:
-            self.net = self.core.load_network(network=self.model, device_name=self.device, num_requests=1)
-        except Exception as e:
-            log.error(e)
-
-    def predict(self, image):
+    def predict(self, image, toggle_face_detect):
         try:
             image_for_prediction = self.preprocess_input(image)
             
@@ -44,17 +26,13 @@ class FaceDetectionModel:
             if self.net.requests[REQUEST_ID].wait(-1) == 0:
                 outputs = self.net.requests[REQUEST_ID].outputs
                 outputs = self.preprocess_output(outputs)
-                locations, image = self.draw_outputs(outputs, image)
+                locations, image = self.draw_outputs(outputs, image, toggle_face_detect)
             
             return locations, image
         except Exception as e:
             log.error(f"Error in predict: {e}")
 
-    def check_model(self):
-        # i don't need this
-        pass
-
-    def draw_outputs(self, coords, image):
+    def draw_outputs(self, coords, image, toggle_face_detect):
         # see create_bounding_boxes function definition for details. 
         # https://github.com/anvillasoto/people-counter-edge-application/blob/master/main.py
         try:
@@ -73,7 +51,8 @@ class FaceDetectionModel:
                     locations.append([xmin,ymin, xmax, ymax])
 
                     # add box to detected face
-                    cv2.rectangle(image, (xmin, ymin), (xmax, ymax), COLOR_BLUE_BGR, 3)
+                    if toggle_face_detect == 1:
+                        cv2.rectangle(image, (xmin, ymin), (xmax, ymax), COLOR_BLUE_BGR, 3)
                     
             return locations, image
         
